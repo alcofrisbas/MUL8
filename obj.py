@@ -71,10 +71,10 @@ class Particle(object):
 		self.b = board
 		self.direction = direction
 		self.value = value
-		c = "{},{}".format(self.coords[0],self.coords[1])
-		if not self.b.d.get(c,False):
-				self.b.d[c] = []
-		self.b.d[c].append(self)
+		self.c = "{},{}".format(self.coords[0],self.coords[1])
+		if not self.b.d.get(self.c,False):
+				self.b.d[self.c] = []
+		self.b.d[self.c].append(self)
 		self.b.particles.append(self)
 
 	def update(self):
@@ -89,7 +89,10 @@ class Particle(object):
 		elif self.direction == "W":
 			self.coords[0] = str(int(self.coords[0])-1)
 		cur = "{},{}".format(self.coords[0],self.coords[1])
-		self.b.d[prev].remove(self)
+		try:
+			self.b.d[prev].remove(self)
+		except:
+			pass
 		if not self.b.d.get(cur):
 			self.b.d[cur] = []
 		self.b.d[cur].append(self)
@@ -118,10 +121,10 @@ class Emulator(object):
 		self.iSet = iSet
 		self.coords = coords
 		self.b = board
-		c = "{},{}".format(self.coords[0],self.coords[1])
-		if not self.b.d.get(c,False):
-				self.b.d[c] = []
-		self.b.d[c].append(self)
+		self.c = "{},{}".format(self.coords[0],self.coords[1])
+		if not self.b.d.get(self.c,False):
+				self.b.d[self.c] = []
+		self.b.d[self.c].append(self)
 		self.b.emitters.append(self)
 		self.tokenize()
 	def tokenize(self):
@@ -158,7 +161,7 @@ class Emulator(object):
 		self.parse(tokens)
 	def parse(self, tokens):
 		x = 0
-		fn = ""
+		self.fn = ""
 		while x < len(tokens):
 			#print "looking"
 			if tokens[x].t == "O":
@@ -169,10 +172,40 @@ class Emulator(object):
 					while x < len(tokens) and tokens[x].t == "D":
 						outs.append(tokens[x].v)
 						x +=1
+					self.fn = "val = i.value {} 1\nfor d in {}:\n\tself.emit(Particle(self.makeCoords(d), d, i.value, self.b))".format(op,outs)
+					print self.fn
+				#elif tokens[x].v == "=":
+
+
 			x += 1
-		print op, outs
+	def makeCoords(self,d):
+		coords = self.coords
+		if d == "N":
+			coords[1] = str(int(coords[1])+1)
+			#coords[0] = str(origCoords[0])
+		elif d == "S":
+			coords[1] = str(int(coords[1])-1)
+		elif d == "E":
+			coords[0] = str(int(coords[0])+1)
+		elif d == "W":
+			coords[0] = str(int(coords[0])-1)
+
+		return coords
+
+	def emit(self, p):
+		print self.c, self.coords
+		print "emitting a particle!"
+		#self.b.particles.append(p)
+		print p.coords, p.direction
+	
 	def update(self):
-		pass
+		print"updating"
+		for i in self.b.d[self.c]:
+			#print self.b.d
+			if isinstance(i, Particle):
+				exec(self.fn)
+				#self.b.d[self.c].remove(i)
+				self.b.particles.remove(i)
 """
 A method for keeping track of everything.
 """
